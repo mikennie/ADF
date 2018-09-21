@@ -1,0 +1,22 @@
+{
+	"name": "SinkSQLServer",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "OnPremiseSQLServer",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"SinkTableName": {
+				"type": "String"
+			}
+		},
+		"type": "SqlServerTable",
+		"typeProperties": {
+			"tableName": {
+				"value": "@dataset().SinkTableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

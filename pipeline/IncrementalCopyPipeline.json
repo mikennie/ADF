@@ -1,0 +1,270 @@
+{
+	"name": "IncrementalCopyPipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "IterateSQLTables",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetSalesForceOrg",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.tableList",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "LookupOldWaterMarkActivity",
+							"description": "This Lookup checks for the watermark date in the ControlMetaData table for each table.  This establishes the starting point for each pull.",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "InitializeDataPull",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"typeProperties": {
+								"source": {
+									"type": "SqlSource",
+									"sqlReaderQuery": {
+										"value": "select SourceWatermark from admin.ControlMetaData where TableName  =  '@{item().TABLE_NAME}'",
+										"type": "Expression"
+									}
+								},
+								"dataset": {
+									"referenceName": "WatermarkDataset",
+									"type": "DatasetReference"
+								}
+							}
+						},
+						{
+							"name": "LookupNewWaterMarkActivity",
+							"description": "This Lookup queries the source table to find the max modified date for each table.  This will serve as the upper bound date when the data pull starts and will then persist as the next watermark.",
+							"type": "Lookup",
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"typeProperties": {
+								"source": {
+									"type": "SalesforceSource",
+									"query": {
+										"value": "select MAX(@{item().WaterMark_Column}) as NewWatermarkvalue from @{item().TABLE_NAME}",
+										"type": "Expression"
+									},
+									"readBehavior": "query"
+								},
+								"dataset": {
+									"referenceName": "SourceDataSet",
+									"type": "DatasetReference"
+								}
+							}
+						},
+						{
+							"name": "InitializeDataPull",
+							"description": "This stored procedure initializes meta data related to the pipeline pull.  See the ControlMetaData table in the sink database.",
+							"type": "SqlServerStoredProcedure",
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"typeProperties": {
+								"storedProcedureName": "[admin].[proc_UpdateControlMetaData]",
+								"storedProcedureParameters": {
+									"UpdateActionType": {
+										"value": "S",
+										"type": "String"
+									},
+									"DataSource": {
+										"value": "FDC",
+										"type": "String"
+									},
+									"DataSourceId": {
+										"value": {
+											"value": "@activity('GetSalesForceOrg').output.firstRow.Id",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TableName": {
+										"value": {
+											"value": "@{item().TABLE_NAME}",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ExtractDateTime": {
+										"value": {
+											"value": "@utcnow()",
+											"type": "Expression"
+										}
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "OnPremiseSQLServer",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "IncrementalCopyActivity",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "LookupNewWaterMarkActivity",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "GetColumnList",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"typeProperties": {
+								"source": {
+									"type": "SalesforceSource",
+									"query": {
+										"value": "@concat('SELECT ', activity('GetColumnList').output.firstRow.ColumnList, ' FROM ', item().TABLE_NAME, ' WHERE ', item().WaterMark_Column, ' >= ', formatDateTime(activity('LookupOldWaterMarkActivity').output.firstRow.SourceWatermark,'yyyy-MM-ddTHH:mm:ssZ'), ' AND ', item().WaterMark_Column, ' <= ' , formatDateTime(activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue,'yyyy-MM-ddTHH:mm:ssZ'))",
+										"type": "Expression"
+									},
+									"readBehavior": "query"
+								},
+								"sink": {
+									"type": "SqlSink",
+									"writeBatchSize": 10000,
+									"sqlWriterStoredProcedureName": {
+										"value": "@{item().StoredProcedureNameForMergeOperation}",
+										"type": "Expression"
+									},
+									"sqlWriterTableType": {
+										"value": "@{item().TableType}",
+										"type": "Expression"
+									},
+									"storedProcedureParameters": {
+										"TenancyId": {
+											"type": "String",
+											"value": {
+												"value": "@activity('GetSalesForceOrg').output.firstRow.Id",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								"enableStaging": false,
+								"dataIntegrationUnits": 0
+							},
+							"inputs": [
+								{
+									"referenceName": "SourceDataSet",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "SinkSQLServer",
+									"type": "DatasetReference",
+									"parameters": {
+										"SinkTableName": "@{item().TABLE_NAME}"
+									}
+								}
+							]
+						},
+						{
+							"name": "GetColumnList",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "LookupOldWaterMarkActivity",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"typeProperties": {
+								"source": {
+									"type": "SqlSource",
+									"sqlReaderQuery": {
+										"value": "select ColumnList from admin.ControlMetaData where TableName  =  '@{item().TABLE_NAME}'",
+										"type": "Expression"
+									}
+								},
+								"dataset": {
+									"referenceName": "WatermarkDataset",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": true
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "GetSalesForceOrg",
+				"description": "This lookup gets the Salesforce OrgId.  This identifies a single Salesforce instance.  It is important that the connection has permission to this object.",
+				"type": "Lookup",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"source": {
+						"type": "SalesforceSource",
+						"query": "SELECT Id from Organization",
+						"readBehavior": "query"
+					},
+					"dataset": {
+						"referenceName": "SourceDataSet",
+						"type": "DatasetReference"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"tableList": {
+				"type": "Object"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

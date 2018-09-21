@@ -1,0 +1,14 @@
+{
+	"name": "WatermarkDataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "OnPremiseSQLServer",
+			"type": "LinkedServiceReference"
+		},
+		"type": "SqlServerTable",
+		"typeProperties": {
+			"tableName": "admin.ControlMetaData"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

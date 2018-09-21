@@ -1,0 +1,11 @@
+{
+	"name": "SourceDataSet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SalesforceDelphiFDC",
+			"type": "LinkedServiceReference"
+		},
+		"type": "SalesforceObject"
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
