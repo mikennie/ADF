@@ -164,7 +164,7 @@
 									"type": "SqlSink",
 									"writeBatchSize": 10000,
 									"preCopyScript": {
-										"value": "TRUNCATE TABLE stage[.@{item().TABLE_NAME}]",
+										"value": "TRUNCATE TABLE stage.[@{item().TABLE_NAME}]",
 										"type": "Expression"
 									},
 									"sqlWriterStoredProcedureName": {
