@@ -4,11 +4,11 @@
 	"properties": {
 		"type": "SqlServer",
 		"typeProperties": {
-			"connectionString": "integrated security=False;data source=USL853;initial catalog=Lybretto;user id=sa",
-			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiI4MTkxYWUxYi1hYzdlLTQ3NDQtOWM2MS02NDc3NGZmNWM2MGEiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+			"connectionString": "integrated security=False;data source=USL5746;initial catalog=LybrettoDB;user id=sa",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiIzZTk0ZjFhNi0wNmM4LTRkN2YtODhhMy1lZDBkNGUwZjQxZjMiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
 		},
 		"connectVia": {
-			"referenceName": "OnPremiseDelphiSQLServer",
+			"referenceName": "USL5746IR",
 			"type": "IntegrationRuntimeReference"
 		}
 	}
