@@ -168,7 +168,7 @@
 										"type": "Expression"
 									},
 									"sqlWriterStoredProcedureName": {
-										"value": "@{item().StoredProcedureNameForMergeOperation}",
+										"value": "@{item().StoredProcedureNameForStageOperation}",
 										"type": "Expression"
 									},
 									"sqlWriterTableType": {
