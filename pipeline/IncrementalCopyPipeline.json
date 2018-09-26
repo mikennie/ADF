@@ -163,7 +163,10 @@
 								"sink": {
 									"type": "SqlSink",
 									"writeBatchSize": 10000,
-									"preCopyScript": "Truncate table @{item().TABLE_NAME}",
+									"preCopyScript": {
+										"value": "TRUNCATE TABLE stage.@{item().TABLE_NAME}",
+										"type": "Expression"
+									},
 									"sqlWriterStoredProcedureName": {
 										"value": "@{item().StoredProcedureNameForMergeOperation}",
 										"type": "Expression"
