@@ -1,0 +1,6 @@
+{
+	"name": "USL5746IntgrationRuntime",
+	"properties": {
+		"type": "SelfHosted"
+	}
+}
