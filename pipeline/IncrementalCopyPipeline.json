@@ -332,7 +332,7 @@
 									},
 									"SourceWatermark": {
 										"value": {
-											"value": "formatDateTime(activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue,'yyyy-MM-ddTHH:mm:ssZ')",
+											"value": "@activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue",
 											"type": "Expression"
 										},
 										"type": "String"
