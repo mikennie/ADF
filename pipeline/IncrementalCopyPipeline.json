@@ -119,6 +119,13 @@
 											"value": "@utcnow()",
 											"type": "Expression"
 										}
+									},
+									"PipelineId": {
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
+										"type": "String"
 									}
 								}
 							},
