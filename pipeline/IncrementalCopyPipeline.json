@@ -272,6 +272,77 @@
 								"referenceName": "OnPremiseSQLServer",
 								"type": "LinkedServiceReference"
 							}
+						},
+						{
+							"name": "UpdatePipelineStatus",
+							"description": "This stored procedure updates meta data related to the pipeline pull.  See the ControlMetaData table in the sink database.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "LoadStageToProduction",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"typeProperties": {
+								"storedProcedureName": "[admin].[proc_UpdateControlMetaData]",
+								"storedProcedureParameters": {
+									"UpdateActionType": {
+										"value": "E",
+										"type": "String"
+									},
+									"DataSource": {
+										"value": "FDC",
+										"type": "String"
+									},
+									"DataSourceId": {
+										"value": {
+											"value": "@activity('GetSalesForceOrg').output.firstRow.Id",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TableName": {
+										"value": {
+											"value": "@{item().TABLE_NAME}",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ExtractDateTime": {
+										"value": {
+											"value": "@utcnow()",
+											"type": "Expression"
+										}
+									},
+									"PipelineId": {
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SourceWatermark": {
+										"value": {
+											"value": "formatDateTime(activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue,'yyyy-MM-ddTHH:mm:ssZ')",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "OnPremiseSQLServer",
+								"type": "LinkedServiceReference"
+							}
 						}
 					]
 				}
