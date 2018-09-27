@@ -6,22 +6,6 @@
 			"type": "string",
 			"metadata": "Data Factory Name",
 			"defaultValue": "DelphiFDCDataFactory"
-		},
-		"OnPremiseSQLServer_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'OnPremiseSQLServer'"
-		},
-		"SalesforceDelphiFDC_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'SalesforceDelphiFDC'"
-		},
-		"SalesforceDelphiFDC_securityToken": {
-			"type": "secureString",
-			"metadata": "Secure string for 'securityToken' of 'SalesforceDelphiFDC'"
-		},
-		"SalesforceDelphiFDC_properties_typeProperties_username": {
-			"type": "string",
-			"defaultValue": "mkennie@johndev.com"
 		}
 	},
 	"variables": {
@@ -45,7 +29,6 @@
 								]
 							}
 						],
-						"userProperties": [],
 						"typeProperties": {
 							"items": {
 								"value": "@pipeline().parameters.tableList",
@@ -71,7 +54,6 @@
 										"secureOutput": false,
 										"secureInput": false
 									},
-									"userProperties": [],
 									"typeProperties": {
 										"source": {
 											"type": "SqlSource",
@@ -82,8 +64,7 @@
 										},
 										"dataset": {
 											"referenceName": "WatermarkDataset",
-											"type": "DatasetReference",
-											"parameters": {}
+											"type": "DatasetReference"
 										}
 									}
 								},
@@ -91,7 +72,6 @@
 									"name": "LookupNewWaterMarkActivity",
 									"description": "This Lookup queries the source table to find the max modified date for each table.  This will serve as the upper bound date when the data pull starts and will then persist as the next watermark.",
 									"type": "Lookup",
-									"dependsOn": [],
 									"policy": {
 										"timeout": "7.00:00:00",
 										"retry": 0,
@@ -99,7 +79,6 @@
 										"secureOutput": false,
 										"secureInput": false
 									},
-									"userProperties": [],
 									"typeProperties": {
 										"source": {
 											"type": "SalesforceSource",
@@ -111,8 +90,7 @@
 										},
 										"dataset": {
 											"referenceName": "SourceDataSet",
-											"type": "DatasetReference",
-											"parameters": {}
+											"type": "DatasetReference"
 										}
 									}
 								},
@@ -120,7 +98,6 @@
 									"name": "InitializeDataPull",
 									"description": "This stored procedure initializes meta data related to the pipeline pull.  See the ControlMetaData table in the sink database.",
 									"type": "SqlServerStoredProcedure",
-									"dependsOn": [],
 									"policy": {
 										"timeout": "7.00:00:00",
 										"retry": 0,
@@ -128,7 +105,6 @@
 										"secureOutput": false,
 										"secureInput": false
 									},
-									"userProperties": [],
 									"typeProperties": {
 										"storedProcedureName": "[concat('[', 'admin].[proc_UpdateControlMetaData]')]",
 										"storedProcedureParameters": {
@@ -198,7 +174,6 @@
 										"secureOutput": false,
 										"secureInput": false
 									},
-									"userProperties": [],
 									"typeProperties": {
 										"source": {
 											"type": "SalesforceSource",
@@ -239,8 +214,7 @@
 									"inputs": [
 										{
 											"referenceName": "SourceDataSet",
-											"type": "DatasetReference",
-											"parameters": {}
+											"type": "DatasetReference"
 										}
 									],
 									"outputs": [
@@ -271,7 +245,6 @@
 										"secureOutput": false,
 										"secureInput": false
 									},
-									"userProperties": [],
 									"typeProperties": {
 										"source": {
 											"type": "SqlSource",
@@ -282,8 +255,7 @@
 										},
 										"dataset": {
 											"referenceName": "WatermarkDataset",
-											"type": "DatasetReference",
-											"parameters": {}
+											"type": "DatasetReference"
 										},
 										"firstRowOnly": true
 									}
@@ -306,7 +278,6 @@
 										"secureOutput": false,
 										"secureInput": false
 									},
-									"userProperties": [],
 									"typeProperties": {
 										"storedProcedureName": {
 											"value": "@{item().StoredProcedureNameForLoadOperation}",
@@ -325,7 +296,6 @@
 						"name": "GetSalesForceOrg",
 						"description": "This lookup gets the Salesforce OrgId.  This identifies a single Salesforce instance.  It is important that the connection has permission to this object.",
 						"type": "Lookup",
-						"dependsOn": [],
 						"policy": {
 							"timeout": "7.00:00:00",
 							"retry": 0,
@@ -333,7 +303,6 @@
 							"secureOutput": false,
 							"secureInput": false
 						},
-						"userProperties": [],
 						"typeProperties": {
 							"source": {
 								"type": "SalesforceSource",
@@ -342,8 +311,7 @@
 							},
 							"dataset": {
 								"referenceName": "SourceDataSet",
-								"type": "DatasetReference",
-								"parameters": {}
+								"type": "DatasetReference"
 							}
 						}
 					}
@@ -352,144 +320,8 @@
 					"tableList": {
 						"type": "Object"
 					}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/SourceDataSet')]",
-				"[concat(variables('factoryId'), '/datasets/WatermarkDataset')]",
-				"[concat(variables('factoryId'), '/linkedServices/OnPremiseSQLServer')]",
-				"[concat(variables('factoryId'), '/datasets/SinkSQLServer')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/SinkSQLServer')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "OnPremiseSQLServer",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"SinkTableName": {
-						"type": "String"
-					}
-				},
-				"annotations": [],
-				"type": "SqlServerTable",
-				"typeProperties": {
-					"tableName": {
-						"value": "@dataset().SinkTableName",
-						"type": "Expression"
-					}
 				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/OnPremiseSQLServer')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/SourceDataSet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "SalesforceDelphiFDC",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "SalesforceObject",
-				"typeProperties": {}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SalesforceDelphiFDC')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/WatermarkDataset')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "OnPremiseSQLServer",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "SqlServerTable",
-				"typeProperties": {
-					"tableName": "admin.ControlMetaData"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/OnPremiseSQLServer')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/OnPremiseSQLServer')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "SqlServer",
-				"typeProperties": {
-					"connectionString": "[parameters('OnPremiseSQLServer_connectionString')]"
-				},
-				"connectVia": {
-					"referenceName": "USL5746IR",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/USL5746IR')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/SalesforceDelphiFDC')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "Salesforce",
-				"typeProperties": {
-					"environmentUrl": "https://login.salesforce.com",
-					"username": "[parameters('SalesforceDelphiFDC_properties_typeProperties_username')]",
-					"password": {
-						"type": "SecureString",
-						"value": "[parameters('SalesforceDelphiFDC_password')]"
-					},
-					"securityToken": {
-						"type": "SecureString",
-						"value": "[parameters('SalesforceDelphiFDC_securityToken')]"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/OnPremiseDelphiSQLServer')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "SelfHosted",
-				"typeProperties": {
-					"linkedInfo": {
-						"resourceId": "/subscriptions/1a9240c4-5dcf-4077-b223-523b9a4aa1c0/resourcegroups/DataFactoryResourceGroup/providers/Microsoft.DataFactory/factories/MKADFTutorialDataFactory/integrationruntimes/TutorialIntegrationRuntime",
-						"authorizationType": "Rbac"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/USL5746IR')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "SelfHosted",
-				"typeProperties": {}
-			},
-			"dependsOn": []
+			}
 		}
 	]
 }
