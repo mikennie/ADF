@@ -1,0 +1,13 @@
+{
+	"name": "SalesforceObject1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SalesforceDelphiFDC",
+			"type": "LinkedServiceReference"
+		},
+		"type": "SalesforceObject",
+		"typeProperties": {
+			"objectApiName": "Account"
+		}
+	}
+}
