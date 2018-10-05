@@ -336,6 +336,13 @@
 											"type": "Expression"
 										},
 										"type": "String"
+									},
+									"RecordCount": {
+										"value": {
+											"value": "@activity('IncrementalCopyActivity').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int"
 									}
 								}
 							},
