@@ -128,10 +128,6 @@
 										"type": "String"
 									}
 								}
-							},
-							"linkedServiceName": {
-								"referenceName": "OnPremiseSQLServer",
-								"type": "LinkedServiceReference"
 							}
 						},
 						{
@@ -267,10 +263,6 @@
 									"value": "@{item().StoredProcedureNameForLoadOperation}",
 									"type": "Expression"
 								}
-							},
-							"linkedServiceName": {
-								"referenceName": "OnPremiseSQLServer",
-								"type": "LinkedServiceReference"
 							}
 						},
 						{
@@ -345,10 +337,6 @@
 										"type": "Int"
 									}
 								}
-							},
-							"linkedServiceName": {
-								"referenceName": "OnPremiseSQLServer",
-								"type": "LinkedServiceReference"
 							}
 						}
 					]
