@@ -2,13 +2,10 @@
 	"name": "WatermarkDataset",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "OnPremiseSQLServer",
+			"referenceName": "AubergeAzureSqlServer",
 			"type": "LinkedServiceReference"
 		},
-		"type": "SqlServerTable",
-		"typeProperties": {
-			"tableName": "admin.ControlMetaData"
-		}
+		"type": "SqlServerTable"
 	},
 	"type": "Microsoft.DataFactory/factories/datasets"
 }
