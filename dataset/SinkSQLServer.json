@@ -1,10 +1,6 @@
 {
 	"name": "SinkSQLServer",
 	"properties": {
-		"linkedServiceName": {
-			"referenceName": "OnPremiseSQLServer",
-			"type": "LinkedServiceReference"
-		},
 		"parameters": {
 			"SinkTableName": {
 				"type": "String"
