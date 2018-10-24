@@ -1,6 +1,10 @@
 {
 	"name": "SinkSQLServer",
 	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AubergeAzureSqlServer",
+			"type": "LinkedServiceReference"
+		},
 		"parameters": {
 			"SinkTableName": {
 				"type": "String"
