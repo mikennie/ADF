@@ -130,7 +130,7 @@
 								}
 							},
 							"linkedServiceName": {
-								"referenceName": "OnPremiseSQLServer",
+								"referenceName": "AubergeAzureSqlServer",
 								"type": "LinkedServiceReference"
 							}
 						},
@@ -269,7 +269,7 @@
 								}
 							},
 							"linkedServiceName": {
-								"referenceName": "OnPremiseSQLServer",
+								"referenceName": "AubergeAzureSqlServer",
 								"type": "LinkedServiceReference"
 							}
 						},
@@ -347,7 +347,7 @@
 								}
 							},
 							"linkedServiceName": {
-								"referenceName": "OnPremiseSQLServer",
+								"referenceName": "AubergeAzureSqlServer",
 								"type": "LinkedServiceReference"
 							}
 						}
