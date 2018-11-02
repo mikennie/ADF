@@ -670,6 +670,33 @@
 								"parameters": {}
 							}
 						}
+					},
+					{
+						"name": "Populate Aamaze Pace Stage",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "IterateSQLTables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[concat('[', 'dbo].[proc_StageAamazePaceDetail]')]"
+						},
+						"linkedServiceName": {
+							"referenceName": "AubergeAzureSqlServer",
+							"type": "LinkedServiceReference"
+						}
 					}
 				],
 				"parameters": {
@@ -681,8 +708,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/SourceDataSet')]",
-				"[concat(variables('factoryId'), '/datasets/WatermarkDataset')]",
 				"[concat(variables('factoryId'), '/linkedServices/AubergeAzureSqlServer')]",
+				"[concat(variables('factoryId'), '/datasets/WatermarkDataset')]",
 				"[concat(variables('factoryId'), '/datasets/SinkSQLServer')]"
 			]
 		},
