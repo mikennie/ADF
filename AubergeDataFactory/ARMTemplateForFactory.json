@@ -448,7 +448,7 @@
 										"source": {
 											"type": "SalesforceSource",
 											"query": {
-												"value": "@concat('SELECT ', activity('GetColumnList').output.firstRow.ColumnList, ' FROM ', item().TABLE_NAME, ' WHERE ', item().WaterMark_Column, ' > ', formatDateTime(activity('LookupOldWaterMarkActivity').output.firstRow.SourceWatermark,'yyyy-MM-ddTHH:mm:ssZ'), ' AND ', item().WaterMark_Column, ' <= ' , formatDateTime(activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue,'yyyy-MM-ddTHH:mm:ssZ'), item().AdditionalFilter )",
+												"value": "@concat('SELECT ', activity('GetColumnList').output.firstRow.ColumnList, ' FROM ', item().TABLE_NAME, ' WHERE ', item().WaterMark_Column, ' > ', formatDateTime(activity('LookupOldWaterMarkActivity').output.firstRow.SourceWatermark,'yyyy-MM-ddTHH:mm:ssZ'), ' AND ', item().WaterMark_Column, ' <= ' , formatDateTime(coalesce(activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue, '1900-01-03'),'yyyy-MM-ddTHH:mm:ssZ'), item().AdditionalFilter )\n",
 												"type": "Expression"
 											},
 											"readBehavior": "query"
@@ -678,7 +678,7 @@
 							{
 								"activity": "IterateSQLTables",
 								"dependencyConditions": [
-									"Succeeded"
+									"Skipped"
 								]
 							}
 						],
