@@ -678,7 +678,7 @@
 							{
 								"activity": "IterateSQLTables",
 								"dependencyConditions": [
-									"Skipped"
+									"Succeeded"
 								]
 							}
 						],
