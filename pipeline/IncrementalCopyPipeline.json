@@ -67,7 +67,7 @@
 								"source": {
 									"type": "SalesforceSource",
 									"query": {
-										"value": "select MAX(@{item().WaterMark_Column}) as NewWatermarkvalue from @{item().TABLE_NAME}",
+										"value": "select MAX(@{item().WaterMark_Column}) as NewWatermarkvalue, COUNT(*) as SourceRecordCount from @{item().TABLE_NAME}",
 										"type": "Expression"
 									},
 									"readBehavior": "query"
@@ -340,6 +340,13 @@
 									"RecordCount": {
 										"value": {
 											"value": "@activity('IncrementalCopyActivity').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int"
+									},
+									"SourceRecordCount": {
+										"value": {
+											"value": "@activity('LookupNewWaterMarkActivity').output.firstrow.SourceRecordCount",
 											"type": "Expression"
 										},
 										"type": "Int"
