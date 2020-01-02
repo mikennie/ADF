@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory Name",
+			"metadata": "Data Factory name",
 			"defaultValue": "AubergeDataFactory"
 		},
 		"AubergeAzureSqlServer_connectionString": {
@@ -19,12 +19,16 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'securityToken' of 'SalesforceDelphiFDC'"
 		},
+		"SalesforceDelphiFDC_properties_typeProperties_environmentUrl": {
+			"type": "string",
+			"defaultValue": "https://login.salesforce.com"
+		},
 		"SalesforceDelphiFDC_properties_typeProperties_username": {
 			"type": "string",
 			"defaultValue": "jaimejb@aol.com"
 		},
 		"Auberge Daily Trigger_properties_IncrementalCopyPipeline_parameters_tableList": {
-			"type": "string",
+			"type": "array",
 			"defaultValue": [
 				{
 					"TABLE_NAME": "Account",
@@ -274,7 +278,7 @@
 		},
 		"containerSasToken": {
 			"type": "string",
-			"metadata": "Sas Token to storage account containing linked ARM templates"
+			"metadata": "Sas token to storage account containing linked ARM templates"
 		}
 	},
 	"variables": {
@@ -303,6 +307,9 @@
 					},
 					"SalesforceDelphiFDC_securityToken": {
 						"value": "[parameters('SalesforceDelphiFDC_securityToken')]"
+					},
+					"SalesforceDelphiFDC_properties_typeProperties_environmentUrl": {
+						"value": "[parameters('SalesforceDelphiFDC_properties_typeProperties_environmentUrl')]"
 					},
 					"SalesforceDelphiFDC_properties_typeProperties_username": {
 						"value": "[parameters('SalesforceDelphiFDC_properties_typeProperties_username')]"

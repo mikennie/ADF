@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory Name",
+			"metadata": "Data Factory name",
 			"defaultValue": "AubergeDataFactory"
 		},
 		"AubergeAzureSqlServer_connectionString": {
@@ -19,12 +19,16 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'securityToken' of 'SalesforceDelphiFDC'"
 		},
+		"SalesforceDelphiFDC_properties_typeProperties_environmentUrl": {
+			"type": "string",
+			"defaultValue": "https://login.salesforce.com"
+		},
 		"SalesforceDelphiFDC_properties_typeProperties_username": {
 			"type": "string",
 			"defaultValue": "jaimejb@aol.com"
 		},
 		"Auberge Daily Trigger_properties_IncrementalCopyPipeline_parameters_tableList": {
-			"type": "string",
+			"type": "array",
 			"defaultValue": [
 				{
 					"TABLE_NAME": "Account",
@@ -375,7 +379,7 @@
 									},
 									"userProperties": [],
 									"typeProperties": {
-										"storedProcedureName": "[concat('[', 'admin].[proc_UpdateControlMetaData]')]",
+										"storedProcedureName": "[[admin].[proc_UpdateControlMetaData]",
 										"storedProcedureParameters": {
 											"UpdateActionType": {
 												"value": "S",
@@ -584,7 +588,7 @@
 									},
 									"userProperties": [],
 									"typeProperties": {
-										"storedProcedureName": "[concat('[', 'admin].[proc_UpdateControlMetaData]')]",
+										"storedProcedureName": "[[admin].[proc_UpdateControlMetaData]",
 										"storedProcedureParameters": {
 											"UpdateActionType": {
 												"value": "E",
@@ -698,7 +702,7 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"storedProcedureName": "[concat('[', 'dbo].[proc_StageAamazePaceDetail]')]"
+							"storedProcedureName": "[[dbo].[proc_StageAamazePaceDetail]"
 						},
 						"linkedServiceName": {
 							"referenceName": "AubergeAzureSqlServer",
@@ -802,7 +806,7 @@
 				"annotations": [],
 				"type": "Salesforce",
 				"typeProperties": {
-					"environmentUrl": "https://login.salesforce.com",
+					"environmentUrl": "[parameters('SalesforceDelphiFDC_properties_typeProperties_environmentUrl')]",
 					"username": "[parameters('SalesforceDelphiFDC_properties_typeProperties_username')]",
 					"password": {
 						"type": "SecureString",
@@ -822,7 +826,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Started",
+				"runtimeState": "Stopped",
 				"pipelines": [
 					{
 						"pipelineReference": {
