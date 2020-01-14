@@ -451,6 +451,35 @@
 						"AzureRegionName": "East US 2"
 					}
 				}
+			},
+			{
+				"name": "ScaleAzureSQLDown",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Populate Aamaze Pace Stage",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "ScaleAzureSQLPipeline",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"ServiceTier": "Standard",
+						"ComputeSize": "S0",
+						"AzureSQLServerName": "auberge",
+						"AzureSQLDatabaseName": "auberge",
+						"SubscriptionID": "0d0251d8-2a92-4a17-9727-acfeecdbb6ca",
+						"ResourceGroupName": "AubergeResourceGroup",
+						"AzureRegionName": "East US 2"
+					}
+				}
 			}
 		],
 		"parameters": {
