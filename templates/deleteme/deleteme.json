@@ -1,0 +1,62 @@
+{
+	"name": "ADF_Scale_Azure_AS",
+	"properties": {
+		"activities": [
+			{
+				"name": "00_Scale_Azure_AS",
+				"type": "WebActivity",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"url": {
+						"value": "@concat('https://management.azure.com/subscriptions/', pipeline().parameters.SubscriptionID, '/resourceGroups/', pipeline().parameters.ResourceGroupName, '/providers/Microsoft.AnalysisServices/servers/',pipeline().parameters.AzureASServerName,'?api-version=2017-08-01-beta')",
+						"type": "Expression"
+					},
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": {
+						"value": "@json(concat('{\"sku\":{ \"capacity\": 1,\"name\":\"', pipeline().parameters.ComputeSize, '\",\"tier\":\"', pipeline().parameters.ServiceTier, '\"},', '\"location\": \"', pipeline().parameters.AzureRegionName, ' \"}'  ) )",
+						"type": "Expression"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://management.azure.com/"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"ServiceTier": {
+				"type": "String",
+				"defaultValue": "Basic"
+			},
+			"ComputeSize": {
+				"type": "String",
+				"defaultValue": "B1"
+			},
+			"AzureASServerName": {
+				"type": "String",
+				"defaultValue": "<specifyDefaultASServer>"
+			},
+			"SubscriptionID": {
+				"type": "String",
+				"defaultValue": "<specifyDefaultSubscriptionID>"
+			},
+			"ResourceGroupName": {
+				"type": "String",
+				"defaultValue": "<specifyDefaultRG>"
+			},
+			"AzureRegionName": {
+				"type": "String",
+				"defaultValue": "West Europe"
+			}
+		}
+	}
+}
