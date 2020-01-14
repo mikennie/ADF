@@ -13,6 +13,7 @@
 						]
 					}
 				],
+				"userProperties": [],
 				"typeProperties": {
 					"items": {
 						"value": "@pipeline().parameters.tableList",
@@ -38,6 +39,7 @@
 								"secureOutput": false,
 								"secureInput": false
 							},
+							"userProperties": [],
 							"typeProperties": {
 								"source": {
 									"type": "SqlSource",
@@ -56,6 +58,7 @@
 							"name": "LookupNewWaterMarkActivity",
 							"description": "This Lookup queries the source table to find the max modified date for each table.  This will serve as the upper bound date when the data pull starts and will then persist as the next watermark.",
 							"type": "Lookup",
+							"dependsOn": [],
 							"policy": {
 								"timeout": "7.00:00:00",
 								"retry": 0,
@@ -63,6 +66,7 @@
 								"secureOutput": false,
 								"secureInput": false
 							},
+							"userProperties": [],
 							"typeProperties": {
 								"source": {
 									"type": "SalesforceSource",
@@ -82,6 +86,7 @@
 							"name": "InitializeDataPull",
 							"description": "This stored procedure initializes meta data related to the pipeline pull.  See the ControlMetaData table in the sink database.",
 							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
 							"policy": {
 								"timeout": "7.00:00:00",
 								"retry": 0,
@@ -89,6 +94,7 @@
 								"secureOutput": false,
 								"secureInput": false
 							},
+							"userProperties": [],
 							"typeProperties": {
 								"storedProcedureName": "[admin].[proc_UpdateControlMetaData]",
 								"storedProcedureParameters": {
@@ -158,6 +164,7 @@
 								"secureOutput": false,
 								"secureInput": false
 							},
+							"userProperties": [],
 							"typeProperties": {
 								"source": {
 									"type": "SalesforceSource",
@@ -229,6 +236,7 @@
 								"secureOutput": false,
 								"secureInput": false
 							},
+							"userProperties": [],
 							"typeProperties": {
 								"source": {
 									"type": "SqlSource",
@@ -262,6 +270,7 @@
 								"secureOutput": false,
 								"secureInput": false
 							},
+							"userProperties": [],
 							"typeProperties": {
 								"storedProcedureName": {
 									"value": "@{item().StoredProcedureNameForLoadOperation}",
@@ -292,6 +301,7 @@
 								"secureOutput": false,
 								"secureInput": false
 							},
+							"userProperties": [],
 							"typeProperties": {
 								"storedProcedureName": "[admin].[proc_UpdateControlMetaData]",
 								"storedProcedureParameters": {
@@ -365,6 +375,14 @@
 				"name": "GetSalesForceOrg",
 				"description": "This lookup gets the Salesforce OrgId.  This identifies a single Salesforce instance.  It is important that the connection has permission to this object.",
 				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "ScaleAzureSQLUp",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -372,6 +390,7 @@
 					"secureOutput": false,
 					"secureInput": false
 				},
+				"userProperties": [],
 				"typeProperties": {
 					"source": {
 						"type": "SalesforceSource",
@@ -402,6 +421,7 @@
 					"secureOutput": false,
 					"secureInput": false
 				},
+				"userProperties": [],
 				"typeProperties": {
 					"storedProcedureName": "[dbo].[proc_StageAamazePaceDetail]"
 				},
@@ -409,13 +429,36 @@
 					"referenceName": "AubergeAzureSqlServer",
 					"type": "LinkedServiceReference"
 				}
+			},
+			{
+				"name": "ScaleAzureSQLUp",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "ScaleAzureSQLPipeline",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"ServiceTier": "Standard",
+						"ComputeSize": "S2",
+						"AzureSQLServerName": "auberge",
+						"AzureSQLDatabaseName": "auberge",
+						"SubscriptionID": "0d0251d8-2a92-4a17-9727-acfeecdbb6ca",
+						"ResourceGroupName": "AubergeResourceGroup",
+						"AzureRegionName": "East US 2"
+					}
+				}
 			}
 		],
 		"parameters": {
 			"tableList": {
 				"type": "Object"
 			}
-		}
+		},
+		"annotations": []
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }
