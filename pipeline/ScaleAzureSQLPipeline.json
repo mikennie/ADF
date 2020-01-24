@@ -41,7 +41,7 @@
 			},
 			"ComputeSize": {
 				"type": "String",
-				"defaultValue": "S1"
+				"defaultValue": "S0"
 			},
 			"AzureSQLServerName": {
 				"type": "String",
