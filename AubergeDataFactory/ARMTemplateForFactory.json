@@ -784,6 +784,78 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ScaleAzureSQLPipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ScaleAzureSQLPipeline",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": {
+								"value": "@concat('https://management.azure.com/subscriptions/', pipeline().parameters.SubscriptionID, '/resourceGroups/', pipeline().parameters.ResourceGroupName, '/providers/Microsoft.Sql/servers/',pipeline().parameters.AzureSQLServerName,'/databases/',pipeline().parameters.AzureSQLDatabaseName,'?api-version=2017-10-01-preview')",
+								"type": "Expression"
+							},
+							"method": "PUT",
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"body": {
+								"value": "@json(concat('{\"sku\":{\"name\":\"', pipeline().parameters.ComputeSize, '\",\"tier\":\"', pipeline().parameters.ServiceTier, '\"}, \"location\": \"', pipeline().parameters.AzureRegionName, ' \"}' ) )",
+								"type": "Expression"
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com/"
+							}
+						}
+					}
+				],
+				"parameters": {
+					"ServiceTier": {
+						"type": "String",
+						"defaultValue": "Standard"
+					},
+					"ComputeSize": {
+						"type": "String",
+						"defaultValue": "S0"
+					},
+					"AzureSQLServerName": {
+						"type": "String",
+						"defaultValue": "auberge"
+					},
+					"AzureSQLDatabaseName": {
+						"type": "String",
+						"defaultValue": "auberge"
+					},
+					"SubscriptionID": {
+						"type": "String",
+						"defaultValue": "0d0251d8-2a92-4a17-9727-acfeecdbb6ca"
+					},
+					"ResourceGroupName": {
+						"type": "String",
+						"defaultValue": "AubergeResourceGroup"
+					},
+					"AzureRegionName": {
+						"type": "String",
+						"defaultValue": "East US 2"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/SinkSQLServer')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -910,85 +982,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/IncrementalCopyPipeline')]"
 			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/deleteme')]",
-			"type": "Microsoft.DataFactory/factories/templates",
-			"apiVersion": "2018-06-01",
-			"properties": {},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ScaleAzureSQLPipeline')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ScaleAzureSQLPipeline",
-						"type": "WebActivity",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"url": {
-								"value": "@concat('https://management.azure.com/subscriptions/', pipeline().parameters.SubscriptionID, '/resourceGroups/', pipeline().parameters.ResourceGroupName, '/providers/Microsoft.Sql/servers/',pipeline().parameters.AzureSQLServerName,'/databases/',pipeline().parameters.AzureSQLDatabaseName,'?api-version=2017-10-01-preview')",
-								"type": "Expression"
-							},
-							"method": "PUT",
-							"headers": {
-								"Content-Type": "application/json"
-							},
-							"body": {
-								"value": "@json(concat('{\"sku\":{\"name\":\"', pipeline().parameters.ComputeSize, '\",\"tier\":\"', pipeline().parameters.ServiceTier, '\"}, \"location\": \"', pipeline().parameters.AzureRegionName, ' \"}' ) )",
-								"type": "Expression"
-							},
-							"authentication": {
-								"type": "MSI",
-								"resource": "https://management.azure.com/"
-							}
-						}
-					}
-				],
-				"parameters": {
-					"ServiceTier": {
-						"type": "String",
-						"defaultValue": "Standard"
-					},
-					"ComputeSize": {
-						"type": "String",
-						"defaultValue": "S1"
-					},
-					"AzureSQLServerName": {
-						"type": "String",
-						"defaultValue": "auberge"
-					},
-					"AzureSQLDatabaseName": {
-						"type": "String",
-						"defaultValue": "auberge"
-					},
-					"SubscriptionID": {
-						"type": "String",
-						"defaultValue": "0d0251d8-2a92-4a17-9727-acfeecdbb6ca"
-					},
-					"ResourceGroupName": {
-						"type": "String",
-						"defaultValue": "AubergeResourceGroup"
-					},
-					"AzureRegionName": {
-						"type": "String",
-						"defaultValue": "East US 2"
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": []
 		}
 	]
 }

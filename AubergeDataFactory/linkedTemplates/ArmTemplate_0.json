@@ -278,48 +278,6 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/AubergeAzureSqlServer')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "SqlServer",
-				"typeProperties": {
-					"connectionString": "[parameters('AubergeAzureSqlServer_connectionString')]"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/SalesforceDelphiFDC')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "Salesforce",
-				"typeProperties": {
-					"environmentUrl": "[parameters('SalesforceDelphiFDC_properties_typeProperties_environmentUrl')]",
-					"username": "[parameters('SalesforceDelphiFDC_properties_typeProperties_username')]",
-					"password": {
-						"type": "SecureString",
-						"value": "[parameters('SalesforceDelphiFDC_password')]"
-					},
-					"securityToken": {
-						"type": "SecureString",
-						"value": "[parameters('SalesforceDelphiFDC_securityToken')]"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/deleteme')]",
-			"type": "Microsoft.DataFactory/factories/templates",
-			"apiVersion": "2018-06-01",
-			"properties": {},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/ScaleAzureSQLPipeline')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -364,7 +322,7 @@
 					},
 					"ComputeSize": {
 						"type": "String",
-						"defaultValue": "S1"
+						"defaultValue": "S0"
 					},
 					"AzureSQLServerName": {
 						"type": "String",
@@ -388,6 +346,41 @@
 					}
 				},
 				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AubergeAzureSqlServer')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"connectionString": "[parameters('AubergeAzureSqlServer_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SalesforceDelphiFDC')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "Salesforce",
+				"typeProperties": {
+					"environmentUrl": "[parameters('SalesforceDelphiFDC_properties_typeProperties_environmentUrl')]",
+					"username": "[parameters('SalesforceDelphiFDC_properties_typeProperties_username')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('SalesforceDelphiFDC_password')]"
+					},
+					"securityToken": {
+						"type": "SecureString",
+						"value": "[parameters('SalesforceDelphiFDC_securityToken')]"
+					}
+				}
 			},
 			"dependsOn": []
 		},
