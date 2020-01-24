@@ -926,7 +926,7 @@
 							"waitOnCompletion": true,
 							"parameters": {
 								"ServiceTier": "Standard",
-								"ComputeSize": "S1",
+								"ComputeSize": "S0",
 								"AzureSQLServerName": "auberge",
 								"AzureSQLDatabaseName": "auberge",
 								"SubscriptionID": "0d0251d8-2a92-4a17-9727-acfeecdbb6ca",

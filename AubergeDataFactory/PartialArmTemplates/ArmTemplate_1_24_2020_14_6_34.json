@@ -1,0 +1,511 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "AubergeDataFactory"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/IncrementalCopyPipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "IterateSQLTables",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetSalesForceOrg",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.tableList",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "LookupOldWaterMarkActivity",
+									"description": "This Lookup checks for the watermark date in the ControlMetaData table for each table.  This establishes the starting point for each pull.",
+									"type": "Lookup",
+									"dependsOn": [
+										{
+											"activity": "InitializeDataPull",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlSource",
+											"sqlReaderQuery": {
+												"value": "select SourceWatermark from admin.ControlMetaData where TableName  =  '@{item().TABLE_NAME}'",
+												"type": "Expression"
+											}
+										},
+										"dataset": {
+											"referenceName": "WatermarkDataset",
+											"type": "DatasetReference"
+										}
+									}
+								},
+								{
+									"name": "LookupNewWaterMarkActivity",
+									"description": "This Lookup queries the source table to find the max modified date for each table.  This will serve as the upper bound date when the data pull starts and will then persist as the next watermark.",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SalesforceSource",
+											"query": {
+												"value": "select MAX(@{item().WaterMark_Column}) as NewWatermarkvalue, COUNT(*) as SourceRecordCount from @{item().TABLE_NAME}",
+												"type": "Expression"
+											},
+											"readBehavior": "query"
+										},
+										"dataset": {
+											"referenceName": "SourceDataSet",
+											"type": "DatasetReference"
+										}
+									}
+								},
+								{
+									"name": "InitializeDataPull",
+									"description": "This stored procedure initializes meta data related to the pipeline pull.  See the ControlMetaData table in the sink database.",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[admin].[proc_UpdateControlMetaData]",
+										"storedProcedureParameters": {
+											"UpdateActionType": {
+												"value": "S",
+												"type": "String"
+											},
+											"DataSource": {
+												"value": "FDC",
+												"type": "String"
+											},
+											"DataSourceId": {
+												"value": {
+													"value": "@activity('GetSalesForceOrg').output.firstRow.Id",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"TableName": {
+												"value": {
+													"value": "@{item().TABLE_NAME}",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"ExtractDateTime": {
+												"value": {
+													"value": "@utcnow()",
+													"type": "Expression"
+												}
+											},
+											"PipelineId": {
+												"value": {
+													"value": "@pipeline().RunId",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "AubergeAzureSqlServer",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "IncrementalCopyActivity",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "LookupNewWaterMarkActivity",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										},
+										{
+											"activity": "GetColumnList",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SalesforceSource",
+											"query": {
+												"value": "@concat('SELECT ', activity('GetColumnList').output.firstRow.ColumnList, ' FROM ', item().TABLE_NAME, ' WHERE ', item().WaterMark_Column, ' > ', formatDateTime(activity('LookupOldWaterMarkActivity').output.firstRow.SourceWatermark,'yyyy-MM-ddTHH:mm:ssZ'), ' AND ', item().WaterMark_Column, ' <= ' , formatDateTime(coalesce(activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue, '1900-01-03'),'yyyy-MM-ddTHH:mm:ssZ'), item().AdditionalFilter )\n",
+												"type": "Expression"
+											},
+											"readBehavior": "query"
+										},
+										"sink": {
+											"type": "SqlSink",
+											"writeBatchSize": 10000,
+											"preCopyScript": {
+												"value": "TRUNCATE TABLE stage.[@{item().TABLE_NAME}]",
+												"type": "Expression"
+											},
+											"sqlWriterStoredProcedureName": {
+												"value": "@{item().StoredProcedureNameForStageOperation}",
+												"type": "Expression"
+											},
+											"sqlWriterTableType": {
+												"value": "@{item().TableType}",
+												"type": "Expression"
+											},
+											"storedProcedureParameters": {
+												"TenancyId": {
+													"type": "String",
+													"value": {
+														"value": "@activity('GetSalesForceOrg').output.firstRow.Id",
+														"type": "Expression"
+													}
+												}
+											}
+										},
+										"enableStaging": false,
+										"dataIntegrationUnits": 0
+									},
+									"inputs": [
+										{
+											"referenceName": "SourceDataSet",
+											"type": "DatasetReference"
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "SinkSQLServer",
+											"type": "DatasetReference",
+											"parameters": {
+												"SinkTableName": "@{item().TABLE_NAME}"
+											}
+										}
+									]
+								},
+								{
+									"name": "GetColumnList",
+									"type": "Lookup",
+									"dependsOn": [
+										{
+											"activity": "LookupOldWaterMarkActivity",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlSource",
+											"sqlReaderQuery": {
+												"value": "select ColumnList from admin.ControlMetaData where TableName  =  '@{item().TABLE_NAME}'",
+												"type": "Expression"
+											}
+										},
+										"dataset": {
+											"referenceName": "WatermarkDataset",
+											"type": "DatasetReference"
+										},
+										"firstRowOnly": true
+									}
+								},
+								{
+									"name": "LoadStageToProduction",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "IncrementalCopyActivity",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": {
+											"value": "@{item().StoredProcedureNameForLoadOperation}",
+											"type": "Expression"
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "AubergeAzureSqlServer",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "UpdatePipelineStatus",
+									"description": "This stored procedure updates meta data related to the pipeline pull.  See the ControlMetaData table in the sink database.",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "LoadStageToProduction",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[admin].[proc_UpdateControlMetaData]",
+										"storedProcedureParameters": {
+											"UpdateActionType": {
+												"value": "E",
+												"type": "String"
+											},
+											"DataSource": {
+												"value": "FDC",
+												"type": "String"
+											},
+											"DataSourceId": {
+												"value": {
+													"value": "@activity('GetSalesForceOrg').output.firstRow.Id",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"TableName": {
+												"value": {
+													"value": "@{item().TABLE_NAME}",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"ExtractDateTime": {
+												"value": {
+													"value": "@utcnow()",
+													"type": "Expression"
+												}
+											},
+											"PipelineId": {
+												"value": {
+													"value": "@pipeline().RunId",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"SourceWatermark": {
+												"value": {
+													"value": "@activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"RecordCount": {
+												"value": {
+													"value": "@activity('IncrementalCopyActivity').output.rowsCopied",
+													"type": "Expression"
+												},
+												"type": "Int"
+											},
+											"SourceRecordCount": {
+												"value": {
+													"value": "@activity('LookupNewWaterMarkActivity').output.firstrow.SourceRecordCount",
+													"type": "Expression"
+												},
+												"type": "Int"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "AubergeAzureSqlServer",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "GetSalesForceOrg",
+						"description": "This lookup gets the Salesforce OrgId.  This identifies a single Salesforce instance.  It is important that the connection has permission to this object.",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "ScaleAzureSQLUp",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SalesforceSource",
+								"query": "SELECT Id from Organization",
+								"readBehavior": "query"
+							},
+							"dataset": {
+								"referenceName": "SourceDataSet",
+								"type": "DatasetReference"
+							}
+						}
+					},
+					{
+						"name": "Populate Aamaze Pace Stage",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "IterateSQLTables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[proc_StageAamazePaceDetail]"
+						},
+						"linkedServiceName": {
+							"referenceName": "AubergeAzureSqlServer",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "ScaleAzureSQLUp",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "ScaleAzureSQLPipeline",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"ServiceTier": "Standard",
+								"ComputeSize": "S2",
+								"AzureSQLServerName": "auberge",
+								"AzureSQLDatabaseName": "auberge",
+								"SubscriptionID": "0d0251d8-2a92-4a17-9727-acfeecdbb6ca",
+								"ResourceGroupName": "AubergeResourceGroup",
+								"AzureRegionName": "East US 2"
+							}
+						}
+					},
+					{
+						"name": "ScaleAzureSQLDown",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Populate Aamaze Pace Stage",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "ScaleAzureSQLPipeline",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"ServiceTier": "Standard",
+								"ComputeSize": "S0",
+								"AzureSQLServerName": "auberge",
+								"AzureSQLDatabaseName": "auberge",
+								"SubscriptionID": "0d0251d8-2a92-4a17-9727-acfeecdbb6ca",
+								"ResourceGroupName": "AubergeResourceGroup",
+								"AzureRegionName": "East US 2"
+							}
+						}
+					}
+				],
+				"parameters": {
+					"tableList": {
+						"type": "Object"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		}
+	]
+}
